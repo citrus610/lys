@@ -55,8 +55,8 @@ Result build(Search::Result& search_result, u32 field_count)
         }
         attack_count += candidate.attacks.size();
     }
-    // bool trigger = (13 * 6 - field_count <= 16) || (chain_score_max >= 70000);
-    bool trigger = chain_score_max >= 70000;
+    bool trigger = (13 * 6 - field_count <= 16) || (chain_score_max >= 70000);
+    // bool trigger = chain_score_max >= 70000;
 
     if (!trigger) {
         auto best = *std::max_element(

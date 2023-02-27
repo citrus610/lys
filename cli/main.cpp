@@ -154,7 +154,7 @@ int main()
 {
     using namespace std;
 
-    create_window(15, 18, 50);
+    create_window(15, 18, 20);
 
     srand(uint32_t(time(NULL)));
 
