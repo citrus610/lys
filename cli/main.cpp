@@ -200,6 +200,7 @@ int main()
     while (true) 
     {
         if (field.get_height(2) > 11) {
+            this_thread::sleep_for(chrono::milliseconds(time_wait * 4));
             return 0;
         }
 
