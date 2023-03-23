@@ -15,6 +15,7 @@ public:
     bool operator != (const FieldBit& other);
     FieldBit operator | (const FieldBit& other);
     FieldBit operator & (const FieldBit& other);
+    FieldBit operator ^ (const FieldBit& other);
     FieldBit operator ~ ();
 public:
     void set_bit(i8 x, i8 y);

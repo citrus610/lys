@@ -31,6 +31,13 @@ FieldBit FieldBit::operator & (const FieldBit& other)
     return result;
 };
 
+FieldBit FieldBit::operator ^ (const FieldBit& other)
+{
+    FieldBit result;
+    result.data = this->data ^ other.data;
+    return result;
+};
+
 FieldBit FieldBit::operator ~ ()
 {
     FieldBit result;

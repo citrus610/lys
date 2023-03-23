@@ -154,7 +154,10 @@ int main()
 {
     using namespace std;
 
-    create_window(15, 18, 20);
+    int pixel_size = 32;
+    std::cin >> pixel_size;
+
+    create_window(15, 18, pixel_size);
 
     srand(uint32_t(time(NULL)));
 
@@ -191,7 +194,7 @@ int main()
 
     // std::cout << peval << std::endl;
 
-    cin.get();
+    // cin.get();
 
     render_field(field);
     this_thread::sleep_for(chrono::milliseconds(time_wait));

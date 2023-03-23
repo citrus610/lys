@@ -38,11 +38,16 @@ i32 evaluate(Field& field, std::optional<Detect::Score> detect, u8 frame, Weight
 
     result += frame * w.frame;
 
+    // const auto pdata = Pattern::DEFAULT();
+    // result += Pattern::evaluate(field, heights, pdata) * w.form;
+
     if (detect.has_value()) {
         result += (detect->chain.score >> 8) * w.ptnl_chain_score;
         result += detect->chain.count * w.ptnl_chain_count;
         result += detect->needed * w.ptnl_chain_needed;
-        result += detect->height * w.ptnl_chain_height;
+        if (*std::min_element(heights, heights + 6) > 3) {
+            result += detect->height * w.ptnl_chain_height;
+        }
     }
 
     return result;
@@ -59,13 +64,17 @@ void link(Field& field, i32& link_v, i32& link_h, i32& link_mid)
 
         FieldBit v;
         v.data = _mm_slli_epi16(m12.data, 1) & m12.data;
+        // v.data = _mm_slli_epi16(m12.data, 1) & _mm_set1_epi16(0b1111);
         link_v += v.get_count();
 
         FieldBit h;
         h.data = _mm_slli_si128(m12.data, 2) & m12.data;
+        // h.data = _mm_slli_si128(m12.data, 2) & _mm_set1_epi16(0b1111);
         link_h += h.get_count();
 
         link_mid += std::popcount(u32(m12.get_col(2) & m12.get_col(3)));
+        // v.data = v.data & _mm_set_epi16(0, 0, 0, 0xFFF, 0, 0, 0xFFF, 0);
+        // link_mid += v.get_count();
     }
 };
 

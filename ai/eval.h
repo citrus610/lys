@@ -2,6 +2,7 @@
 
 #include "../core/core.h"
 #include "detect.h"
+#include "pattern.h"
 #include <fstream>
 #include <string>
 #include <iomanip>
@@ -23,6 +24,7 @@ struct Weight
     i32 symm_sq = 0;
     i32 shape_u = 0;
     i32 shape_u_sq = 0;
+    // i32 form = 0;
 
     i32 frame = 0;
 
@@ -52,6 +54,7 @@ constexpr Weight DEFAULT_WEIGHT = {
     .symm_sq = -5,
     .shape_u = -200,
     .shape_u_sq = -150,
+    // .form = -100,
 
     .frame = -50,
 
@@ -71,6 +74,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Weight,
     symm_sq,
     shape_u,
     shape_u_sq,
+    // form,
     frame,
     ptnl_chain_count,
     ptnl_chain_score,

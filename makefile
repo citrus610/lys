@@ -16,15 +16,18 @@ ifeq ($(PEXT), true)
 CXXFLAGS += -DPEXT
 endif
 
-.PHONY: all cli clean makedir
+.PHONY: all cli test clean makedir
 
-all: cli tuner
+all: cli test tuner
 
 cli: makedir
 	@$(CXX) $(CXXFLAGS) "core\*.cpp" "ai\*.cpp" "cli\*.cpp" $(STATIC_LIB) -o "bin\cli\cli.exe"
 
 test: makedir
-	@$(CXX) $(CXXFLAGS) "core\*.cpp" "ai\*.cpp" "test\*.cpp" $(STATIC_LIB) -o "bin\test\test.exe"
+	@$(CXX) $(CXXFLAGS) -DTUNER "core\*.cpp" "ai\*.cpp" "test\*.cpp" $(STATIC_LIB) -o "bin\test\test.exe"
+
+tuner: makedir
+	@$(CXX) $(CXXFLAGS) -DTUNER "core\*.cpp" "ai\*.cpp" "tuner\*.cpp" $(STATIC_LIB) -o "bin\tuner\tuner.exe"
 
 clean: makedir
 	@rm -rf bin
@@ -34,5 +37,6 @@ makedir:
 	@mkdir -p bin
 	@mkdir -p bin\cli
 	@mkdir -p bin\test
+	@mkdir -p bin\tuner\data
 
 .DEFAULT_GOAL := cli
