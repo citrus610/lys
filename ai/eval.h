@@ -60,7 +60,7 @@ constexpr Weight DEFAULT_WEIGHT = {
 
     .ptnl_chain_count = 2000,
     .ptnl_chain_score = 10,
-    .ptnl_chain_needed = -500,
+    .ptnl_chain_needed = -1000,
     .ptnl_chain_height = 1000,
 };
 
