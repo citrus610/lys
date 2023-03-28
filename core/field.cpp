@@ -7,6 +7,22 @@ Field::Field()
     }
 };
 
+bool Field::operator == (const Field& other)
+{
+    for (u8 cell = 0; cell < Cell::COUNT; ++cell) {
+        if (this->data[cell] != other.data[cell]) {
+            return false;
+        }
+    }
+
+    return true;
+};
+
+bool Field::operator != (const Field& other)
+{
+    return !(*this == other);
+};
+
 void Field::set_cell(i8 x, i8 y, Cell::Type cell)
 {
     this->data[static_cast<u8>(cell)].set_bit(x, y);
@@ -88,7 +104,7 @@ u8 Field::get_drop_pair_frame(i8 x, Direction::Type direction)
 
 bool Field::is_occupied(i8 x, i8 y)
 {
-    if (x < 0 || x > 5 || y < 0) {
+    if (x < 0 || x > 5 || y < 0 || y > 12) {
         return true;
     }
     return y < this->get_height(x);
@@ -96,7 +112,7 @@ bool Field::is_occupied(i8 x, i8 y)
 
 bool Field::is_occupied(i8 x, i8 y, u8 heights[6])
 {
-    if (x < 0 || x > 5 || y < 0) {
+    if (x < 0 || x > 5 || y < 0 || y > 12) {
         return true;
     }
     return y < heights[x];

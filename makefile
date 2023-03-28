@@ -16,18 +16,23 @@ ifeq ($(PEXT), true)
 CXXFLAGS += -DPEXT
 endif
 
+STATIC_LIB = -luser32 -lgdi32 -lopengl32 -lgdiplus -lShlwapi -ldwmapi -lstdc++fs -lsetupapi -lhid -static
+
 .PHONY: all cli test clean makedir
 
 all: cli test tuner
 
 cli: makedir
-	@$(CXX) $(CXXFLAGS) "core\*.cpp" "ai\*.cpp" "cli\*.cpp" $(STATIC_LIB) -o "bin\cli\cli.exe"
+	@$(CXX) $(CXXFLAGS) "core\*.cpp" "ai\*.cpp" "cli\*.cpp" -o "bin\cli\cli.exe"
 
 test: makedir
-	@$(CXX) $(CXXFLAGS) -DTUNER "core\*.cpp" "ai\*.cpp" "test\*.cpp" $(STATIC_LIB) -o "bin\test\test.exe"
+	@$(CXX) $(CXXFLAGS) -DTUNER "core\*.cpp" "ai\*.cpp" "test\*.cpp" -o "bin\test\test.exe"
 
 tuner: makedir
-	@$(CXX) $(CXXFLAGS) -DTUNER "core\*.cpp" "ai\*.cpp" "tuner\*.cpp" $(STATIC_LIB) -o "bin\tuner\tuner.exe"
+	@$(CXX) $(CXXFLAGS) -DTUNER "core\*.cpp" "ai\*.cpp" "tuner\*.cpp" -o "bin\tuner\tuner.exe"
+
+ppc: makedir
+	@$(CXX) $(CXXFLAGS) "core\*.cpp" "ai\*.cpp" "ppc\*.cpp" $(STATIC_LIB) -o "bin\ppc\ppc.exe"
 
 clean: makedir
 	@rm -rf bin
@@ -38,5 +43,6 @@ makedir:
 	@mkdir -p bin\cli
 	@mkdir -p bin\test
 	@mkdir -p bin\tuner\data
+	@mkdir -p bin\ppc
 
 .DEFAULT_GOAL := cli

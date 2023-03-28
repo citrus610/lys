@@ -70,25 +70,35 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
             }
         }
         else {
-            auto best_candidate = *std::max_element(
-                candidate_attack.begin(),
-                candidate_attack.end(),
-                [&] (const std::pair<u32, Search::Attack>& a, const std::pair<u32, Search::Attack>& b) {
-                    if (a.second.count == b.second.count) {
-                        if (a.second.all_clear == b.second.all_clear) {
-                            if (a.second.frame == b.second.frame) {
-                                return a.second.score < b.second.score;
+            auto best_candidate = std::pair<u32, Search::Attack>();
+            
+            if (enemy.attack < 4800) {
+                best_candidate = *std::max_element(
+                    candidate_attack.begin(),
+                    candidate_attack.end(),
+                    [&] (const std::pair<u32, Search::Attack>& a, const std::pair<u32, Search::Attack>& b) {
+                        if (a.second.count == b.second.count) {
+                            if (a.second.all_clear == b.second.all_clear) {
+                                if (a.second.frame == b.second.frame) {
+                                    return a.second.score < b.second.score;
+                                }
+                                return a.second.frame > b.second.frame;
                             }
-
-                            return a.second.frame > b.second.frame;
+                            return a.second.all_clear < b.second.all_clear;
                         }
-
-                        return a.second.all_clear < b.second.all_clear;
+                        return a.second.count > b.second.count;
                     }
-
-                    return a.second.count > b.second.count;
-                }
-            );
+                );
+            }
+            else {
+                best_candidate = *std::max_element(
+                    candidate_attack.begin(),
+                    candidate_attack.end(),
+                    [&] (const std::pair<u32, Search::Attack>& a, const std::pair<u32, Search::Attack>& b) {
+                        return a.second.score < b.second.score;
+                    }
+                );
+            }
 
             return Result {
                 .placement = search_result.candidates[best_candidate.first].placement,

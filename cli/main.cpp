@@ -59,13 +59,18 @@ void render_field(Field field)
     using namespace std;
 
     draw_rectangle(0, 0, 8, 14, PIXEL_SOLID, COLOR_FG_WHITE);
-    draw_rectangle(1, 1, 6, 12, PIXEL_SOLID, COLOR_FG_BLACK);
+    draw_rectangle(1, 0, 6, 13, PIXEL_SOLID, COLOR_FG_BLACK);
+    draw(3, 1, PixelType('X'), COLOR_FG_DARK_RED);
 
-    for (i8 y = 11; y >= 0; --y) {
+    for (i8 y = 12; y >= 0; --y) {
         for (i8 x = 0; x < 6; ++x) {
+            if (field.get_cell(x, y) == Cell::Type::NONE) {
+                continue;
+            }
+
             char c = Cell::to_char(field.get_cell(x, y));
             Color color = pchar_to_color(c);
-            draw(x + 1, 11 - y + 1, PIXEL_CIRCLE, color);
+            draw(x + 1, 12 - y, PIXEL_CIRCLE, color);
         }
     }
 };
@@ -75,9 +80,10 @@ void render_field(Field field, FieldBit mask)
     using namespace std;
 
     draw_rectangle(0, 0, 8, 14, PIXEL_SOLID, COLOR_FG_WHITE);
-    draw_rectangle(1, 1, 6, 12, PIXEL_SOLID, COLOR_FG_BLACK);
+    draw_rectangle(1, 0, 6, 13, PIXEL_SOLID, COLOR_FG_BLACK);
+    draw(3, 1, PixelType('X'), COLOR_FG_DARK_RED);
 
-    for (int y = 11; y >= 0; --y) {
+    for (int y = 12; y >= 0; --y) {
         for (int x = 0; x < 6; ++x) {
             if (((mask.get_col(x) >> y) & 1) > 0) {
                 continue;
@@ -85,21 +91,21 @@ void render_field(Field field, FieldBit mask)
 
             char c = Cell::to_char(field.get_cell(x, y));
             Color color = pchar_to_color(c);
-            draw(x + 1, 11 - y + 1, PIXEL_CIRCLE, color);
+            draw(x + 1, 12 - y, PIXEL_CIRCLE, color);
         }
     }
 };
 
 void render_plan(Field field, Field plan)
 {
-    for (i8 y = 11; y >= 0; --y) {
+    for (i8 y = 12; y >= 0; --y) {
         for (i8 x = 0; x < 6; ++x) {
             if (field.get_cell(x, y) != Cell::Type::NONE) {
                 continue;
             }
             char c = Cell::to_char(plan.get_cell(x, y));
             Color color = pchar_to_color(c);
-            draw(x + 1, 11 - y + 1, PixelType('+'), color);
+            draw(x + 1, 12 - y, PixelType('+'), color);
         }
     }
 };

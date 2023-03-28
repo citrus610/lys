@@ -70,6 +70,28 @@ constexpr Type from_char(char c)
     return Type::NONE;
 };
 
+constexpr std::string to_str(Type cell)
+{
+    switch (cell)
+    {
+    case Type::LEFT:
+        return "LEFT";
+    case Type::RIGHT:
+        return "RIGHT";
+    case Type::CW:
+        return "CW";
+    case Type::CCW:
+        return "CCW";
+    case Type::M180:
+        return "M180";
+    case Type::DROP:
+        return "DROP";
+    case Type::NONE:
+        return "_";
+    }
+    return "";
+};
+
 static i64 bench_move(i32 iter)
 {
     const char c1[13][7] = {
