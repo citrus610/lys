@@ -32,6 +32,7 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
     if (enemy.attack > 0) {
         std::vector<std::pair<u32, Search::Attack>> candidate_attack;
         std::vector<std::pair<u32, Search::Attack>> candidate_attack_all;
+        i32 best_attack = 0;
 
         for (u32 i = 0; i < search_result.candidates.size(); ++i) {
             if (search_result.candidates[i].attacks.empty()) {
@@ -48,6 +49,8 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
                 }
 
                 candidate_attack_all.push_back({i, attack});
+
+                best_attack = std::max(best_attack, attack.score + data.bonus + data.all_clear * data.target * 30);
             }
         }
 
@@ -72,7 +75,16 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
         else {
             auto best_candidate = std::pair<u32, Search::Attack>();
             
-            if (enemy.attack < 4800) {
+            if (enemy.attack >= 2240 || best_attack >= 70000 || field.get_count() >= 60) {
+                best_candidate = *std::max_element(
+                    candidate_attack.begin(),
+                    candidate_attack.end(),
+                    [&] (const std::pair<u32, Search::Attack>& a, const std::pair<u32, Search::Attack>& b) {
+                        return a.second.score < b.second.score;
+                    }
+                );
+            }
+            else {
                 best_candidate = *std::max_element(
                     candidate_attack.begin(),
                     candidate_attack.end(),
@@ -90,15 +102,6 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
                     }
                 );
             }
-            else {
-                best_candidate = *std::max_element(
-                    candidate_attack.begin(),
-                    candidate_attack.end(),
-                    [&] (const std::pair<u32, Search::Attack>& a, const std::pair<u32, Search::Attack>& b) {
-                        return a.second.score < b.second.score;
-                    }
-                );
-            }
 
             return Result {
                 .placement = search_result.candidates[best_candidate.first].placement,
@@ -112,7 +115,7 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
         std::vector<Search::Candidate> attack_candidate;
 
         for (auto& candidate : search_result.candidates) {
-            if (!candidate.attacks.empty() && candidate.attacks[0].frame == 0 && candidate.attacks[0].count <= 5 && candidate.attacks[0].score + data.bonus + data.all_clear * data.target * 30 >= 9 * data.target) {
+            if (!candidate.attacks.empty() && candidate.attacks[0].frame == 0 && candidate.attacks[0].count <= 4 && candidate.attacks[0].score + data.bonus + data.all_clear * data.target * 30 >= 5 * data.target) {
                 attack_candidate.push_back(candidate);
             }
         }
@@ -122,10 +125,10 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
                 attack_candidate.begin(),
                 attack_candidate.end(),
                 [&] (const Search::Candidate& a, const Search::Candidate& b) {
-                    if (a.attacks[0].count == b.attacks[0].count) {
+                    if (a.eval == b.eval) {
                         return a.attacks[0].score > b.attacks[0].score;
                     }
-                    return a.attacks[0].count < b.attacks[0].count;
+                    return a.eval > b.eval;
                 }  
             );
 
@@ -150,7 +153,7 @@ Result build(Search::Result& search_result, u32 field_count)
             continue;
         }
         for (auto attack : search_result.candidates[i].attacks) {
-            if (attack.frame > 6 || attack.count > 4) {
+            if (attack.frame > 6 || attack.count > 3) {
                 continue;
             }
             if (attack.all_clear) {
