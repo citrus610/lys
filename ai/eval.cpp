@@ -45,9 +45,9 @@ i32 evaluate(Field& field, std::optional<Detect::Score> detect, u8 frame, Weight
         result += (detect->chain.score >> 8) * w.ptnl_chain_score;
         result += detect->chain.count * w.ptnl_chain_count;
         result += detect->needed * w.ptnl_chain_needed;
-        if (*std::min_element(heights, heights + 6) > 3) {
+        // if (*std::min_element(heights, heights + 6) > 3) {
             result += detect->height * w.ptnl_chain_height;
-        }
+        // }
     }
 
     return result;

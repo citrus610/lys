@@ -258,7 +258,7 @@ bool get_enemy_danger(Data& data, Enemy& enemy, Field& field)
     bool enemy_obstructed = enemy_unobstructed_count <= (enemy.field.get_count() / 2);
 
     return
-        (enemy_no_attack && enemy.field.get_count() >= 42 && field.get_count() >= 42) ||
+        (enemy_no_attack && enemy.field.get_count() >= 48 && field.get_count() >= 48) ||
         (enemy_no_attack && (field.get_count() >= enemy.field.get_count() * 2)) ||
         enemy_many_garbage ||
         enemy_obstructed ||
