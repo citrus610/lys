@@ -1,15 +1,17 @@
 #pragma once
 
 #include "node.h"
-#include "table.h"
 
 class Layer
 {
 public:
-    Table table;
     std::vector<Node> data;
     size_t width;
 public:
-    void init(size_t width);
+    Layer();
+public:
+    void init(size_t width = 100);
+    void clear();
     void add(Node& node);
+    void sort();
 };

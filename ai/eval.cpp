@@ -3,26 +3,26 @@
 namespace Eval
 {
 
-i32 evaluate(Field& field, std::optional<Detect::Score> detect, Weight& w)
+i32 evaluate(Field& field, std::optional<Detect::Result> detect, u8 frame, Weight& w)
 {
     i32 result = 0;
 
     u8 heights[6];
     field.get_heights(heights);
 
-    i32 link_v = 0;
-    i32 link_h = 0;
+    i32 link_2 = 0;
+    i32 link_3 = 0;
     i32 link_mid = 0;
-    Eval::link(field, link_v, link_h, link_mid);
-    result += link_v * w.link_v;
-    result += link_h * w.link_h;
+    Eval::link(field, link_2, link_3, link_mid);
+    result += link_2 * w.link_2;
+    result += link_3 * w.link_3;
     result += link_mid * w.link_mid;
 
-    i32 d_height = 0;
-    i32 d_height_sq = 0;
-    Eval::d_height(heights, d_height, d_height_sq);
-    result += d_height * w.d_height;
-    result += d_height_sq * w.d_height_sq;
+    i32 bump = 0;
+    i32 bump_sq = 0;
+    Eval::bump(heights, bump, bump_sq);
+    result += bump * w.bump;
+    result += bump_sq * w.bump_sq;
 
     i32 symm = 0;
     i32 symm_sq = 0;
@@ -36,41 +36,56 @@ i32 evaluate(Field& field, std::optional<Detect::Score> detect, Weight& w)
     result += shape_u * w.shape_u;
     result += shape_u_sq * w.shape_u_sq;
 
+    result += frame * w.frame;
+
     if (detect.has_value()) {
-        result += (detect->chain.score >> 8) * w.ptnl_chain_score;
-        result += detect->chain.count * w.ptnl_chain_count;
-        result += detect->needed * w.ptnl_chain_needed;
-        result += detect->height * w.ptnl_chain_height;
+        result += (detect->main.chain.score >> 8) * w.ptnl_chain_score;
+        result += detect->main.chain.count * w.ptnl_chain_count;
+        result += detect->main.needed * w.ptnl_chain_needed;
+        result += detect->main.height * w.ptnl_chain_height;
+
+        result += (detect->harass.chain.score >> 8) * w.harass_score;
+        result += detect->harass.chain.count * w.harass_count;
+        result += detect->harass.needed * w.harass_needed;
+        result += detect->harass.height * w.harass_height;
     }
 
     return result;
 };
 
-void link(Field& field, i32& link_v, i32& link_h, i32& link_mid)
+void link(Field& field, i32& link_2, i32& link_3, i32& link_mid)
 {
-    link_v = 0;
-    link_h = 0;
-    link_mid = 0;
-
     for (u8 p = 0; p < Cell::COUNT - 1; ++p) {
         FieldBit m12 = field.data[p].get_mask_12();
 
-        FieldBit v;
-        v.data = _mm_slli_epi16(m12.data, 1) & m12.data;
-        link_v += v.get_count();
+        __m128i r = _mm_srli_si128(m12.data, 2) & m12.data;
+        __m128i l = _mm_slli_si128(m12.data, 2) & m12.data;
+        __m128i u = _mm_srli_epi16(m12.data, 1) & m12.data;
+        __m128i d = _mm_slli_epi16(m12.data, 1) & m12.data;
 
-        FieldBit h;
-        h.data = _mm_slli_si128(m12.data, 2) & m12.data;
-        link_h += h.get_count();
+        __m128i ud_and = u & d;
+        __m128i lr_and = l & r;
+        __m128i ud_or = u | d;
+        __m128i lr_or = l | r;
 
+        FieldBit m2, m3;
+        m3.data = (ud_or & lr_or) | ud_and | lr_and;
+        m2.data = _mm_andnot_si128(m3.get_expand().data & m12.data, l | u);
+
+        link_2 += m2.get_count();
+        link_3 += m3.get_count();
         link_mid += std::popcount(u32(m12.get_col(2) & m12.get_col(3)));
     }
 };
 
-void d_height(u8 heights[6], i32& d_height, i32& d_height_sq)
+void bump(u8 heights[6], i32& bump, i32& bump_sq)
 {
-    d_height = *std::max_element(heights, heights + 6) - *std::min_element(heights, heights + 6);
-    d_height_sq = d_height * d_height;
+    // for (i32 i = 0; i < 5; ++i) {
+    //     bump += std::abs(heights[i] - heights[i + 1]);
+    //     bump_sq += (heights[i] - heights[i + 1]) * (heights[i] - heights[i + 1]);
+    // }
+    bump = *std::max_element(heights, heights + 6) - *std::min_element(heights, heights + 6);
+    bump_sq = bump * bump;
 };
 
 void symm(u8 heights[6], i32& symm, i32& symm_sq)

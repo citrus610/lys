@@ -1,11 +1,39 @@
 #pragma once
 
 #include "layer.h"
-#include "move.h"
-#include "eval.h"
-#include "detect.h"
+#include "path.h"
 
 namespace Search
+{
+
+namespace Beam
+{
+
+struct Result
+{
+    Move::Placement placement;
+    Field plan = Field();
+    i32 eval = INT32_MIN;
+};
+
+Result search
+(
+    Field field,
+    std::vector<Cell::Pair> queue,
+    Eval::Weight w = Eval::DEFAULT_WEIGHT
+);
+
+void expand
+(
+    Node& node,
+    Cell::Pair pair,
+    Layer& layer,
+    Eval::Weight w
+);
+
+};
+
+namespace Attack
 {
 
 struct Attack
@@ -20,7 +48,6 @@ struct Candidate
 {
     Move::Placement placement;
     std::vector<Attack> attacks;
-    i32 eval = INT32_MIN;
 };
 
 struct Result
@@ -28,20 +55,23 @@ struct Result
     std::vector<Candidate> candidates;
 };
 
-void init_candidates(
-    std::vector<Candidate>& candidates,
+Result search
+(
+    Field field,
+    std::vector<Cell::Pair> queue,
+    i32 thread_count = 4
+);
+
+void dfs
+(
+    Field& field,
     std::vector<Cell::Pair>& queue,
-    Field& root
+    std::vector<Attack>& attacks,
+    i32 score,
+    i32 frame,
+    i32 depth
 );
 
-void search_attack(
-    std::vector<Candidate>& candidates,
-    std::vector<Cell::Pair>& queue
-);
-
-void search_beam(
-    std::vector<Candidate>& candidates,
-    std::vector<Cell::Pair>& queue
-);
+};
 
 };
