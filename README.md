@@ -1,2 +1,2 @@
-# pon
-puyo puyo vs ai
+# Lys
+Puyo Puyo Tsu Vs AI
