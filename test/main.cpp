@@ -1,5 +1,8 @@
 #include <iostream>
 #include "../ai/ai.h"
+#include "../core/core.h"
+#include "../ai/eval.h"
+#include "../ai/search.h"
 
 void load_json_heuristic(Eval::Weight& h)
 {
@@ -94,6 +97,69 @@ std::vector<Cell::Pair> create_queue()
 
 int main()
 {
+    // srand(uint32_t(time(NULL)));
+
+    // Field f;
+    // const char c[13][7] = {
+    //     "......",
+    //     "......",
+    //     "......",
+    //     "......",
+    //     "......",
+    //     "......",
+    //     "......",
+    //     "......",
+    //     "......",
+    //     "......",
+    //     "RYG...",
+    //     "RRYG..",
+    //     "YYGG..",
+    // };
+    // f.from(c);
+    // f.print();
+
+    // i32 l2, l3, lm;
+    // Eval::link(f, l2, l3, lm);
+
+    // printf("l2: %d, l3: %d, lm: %d\n", l2, l3, lm);
+
+    // auto detect = Detect::detect(f);
+    // printf("main:\n    count: %d\n    score: %d\n    height: %d\n    needed: %d\n\n", detect.main.chain.count, detect.main.chain.score, detect.main.height, detect.main.needed);
+    // printf("sub:\n    count: %d\n    score: %d\n    height: %d\n    needed: %d\n\n", detect.harass.chain.count, detect.harass.chain.score, detect.harass.height, detect.harass.needed);
+
+    // detect = Detect::detect_deep(f);
+    // printf("main:\n    count: %d\n    score: %d\n    height: %d\n    needed: %d\n\n", detect.main.chain.count, detect.main.chain.score, detect.main.height, detect.main.needed);
+    // printf("sub:\n    count: %d\n    score: %d\n    height: %d\n    needed: %d\n\n", detect.harass.chain.count, detect.harass.chain.score, detect.harass.height, detect.harass.needed);
+
+    // auto q = create_queue();
+
+    // std::cout << Cell::to_char(q[0].first) << Cell::to_char(q[0].second) << " ";
+    // std::cout << Cell::to_char(q[1].first) << Cell::to_char(q[1].second) << " ";
+    // std::cout << Cell::to_char(q[2].first) << Cell::to_char(q[2].second) << "\n";
+
+    // auto time_1 = std::chrono::high_resolution_clock::now();
+    // auto attack = Search::Attack::search(f, { q[0], q[1], q[2] });
+    // auto time_2 = std::chrono::high_resolution_clock::now();
+    // auto result = Search::Beam::search(f, { q[0], q[1], q[2] });
+    // auto time_3 = std::chrono::high_resolution_clock::now();
+    // auto time_a = std::chrono::duration_cast<std::chrono::microseconds>(time_2 - time_1).count();
+    // printf("time attack: %d\n", time_a);
+    // auto time_b = std::chrono::duration_cast<std::chrono::microseconds>(time_3 - time_2).count();
+    // printf("time beam: %d\n", time_b);
+    // printf("time total: %d\n", time_a + time_b);
+
+    // result.plan.print();
+    // printf("x: %d, r: %d, eval: %d\n", result.placement.x, static_cast<i32>(result.placement.r), result.eval);
+
+    // for (auto& c : attack.candidates) {
+    //     auto ff = f;
+    //     ff.drop_pair(c.placement.x, c.placement.r, q[0]);
+    //     ff.pop();
+    //     ff.print();
+
+    //     printf("x: %d, r: %d, attack: %d\n", c.placement.x, static_cast<i32>(c.placement.r), c.attacks.size());
+    // }
+
     srand(uint32_t(time(NULL)));
 
     std::atomic<i32> map_count[20] = { 0 };
@@ -107,14 +173,6 @@ int main()
 
     const i32 sim_count = 1000;
     std::atomic<i32> i = 0;
-
-    // for (i32 i = 0; i < sim_count; ++i) {
-    //     auto queue = create_queue();
-    //     auto score = get_score(queue, w);
-    //     map_count[score.count] += 1;
-    //     map_score[score.score / 10000] += 1;
-    //     printf("\rprocess: %d/%d", i, sim_count);
-    // }
 
     std::vector<std::thread> threads;
     for (i32 t = 0; t < 4; ++t) {
