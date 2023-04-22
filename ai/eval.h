@@ -56,14 +56,14 @@ constexpr Weight FAST_WEIGHT = {
     .shape_s = 0,
     .nuisance = -100,
     .side_bias = -20,
-    .disconnect = -100,
+    .disconnect = -20,
 
     .frame = -100,
 
     .chain_count = 1000,
     .chain_score = 10,
     .chain_height = 20,
-    .chain_needed = -20
+    .chain_needed = -50
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Weight,
