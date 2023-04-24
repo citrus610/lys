@@ -41,7 +41,7 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
                 }
 
                 // These are attacks that can offset the enemy's attack
-                if (attack.score + data.bonus + data.all_clear * data.target * 30 >= enemy.attack * data.target) {
+                if ((attack.score + data.bonus) / data.target + data.all_clear * 30 >= enemy.attack) {
                     candidate_attack.push_back({i, attack});
                 }
 
@@ -114,6 +114,13 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
                     candidate_attack.begin(),
                     candidate_attack.end(),
                     [&] (const std::pair<u32, Search::Attack>& a, const std::pair<u32, Search::Attack>& b) {
+                        bool a_over_enemy = (a.second.score + data.bonus) / data.target + data.all_clear * 30 > enemy.attack;
+                        bool b_over_enemy = (b.second.score + data.bonus) / data.target + data.all_clear * 30 > enemy.attack;
+
+                        if (a_over_enemy != b_over_enemy) {
+                            return a_over_enemy < b_over_enemy;
+                        }
+
                         if (a.second.count != b.second.count) {
                             return a.second.count > b.second.count;
                         }
