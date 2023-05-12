@@ -16,6 +16,8 @@ struct Weight
 {
     i32 diff = 0;
     i32 diff_s = 0;
+    i32 well = 0;
+    i32 well_s = 0;
     i32 shape = 0;
     i32 shape_s = 0;
     i32 nuisance = 0;
@@ -34,12 +36,14 @@ i32 evaluate(Field& field, std::optional<Detect::Result> detect, u8 frame, Weigh
 
 constexpr Weight DEFAULT_WEIGHT = {
     .diff = -50,
-    .diff_s = -10,
+    .diff_s = -2,
+    .well = 0,
+    .well_s = 0,
     .shape = -50,
     .shape_s = -50,
     .nuisance = -100,
     .side_bias = -20,
-    .disconnect = -20,
+    .disconnect = -40,
 
     .frame = -20,
 
@@ -52,10 +56,12 @@ constexpr Weight DEFAULT_WEIGHT = {
 constexpr Weight FAST_WEIGHT = {
     .diff = 0,
     .diff_s = 0,
+    .well = 0,
+    .well_s = 0,
     .shape = 0,
     .shape_s = 0,
     .nuisance = -100,
-    .side_bias = -20,
+    .side_bias = -100,
     .disconnect = -20,
 
     .frame = -100,
@@ -69,6 +75,8 @@ constexpr Weight FAST_WEIGHT = {
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Weight,
     diff,
     diff_s,
+    well,
+    well_s,
     shape,
     shape_s,
     nuisance,

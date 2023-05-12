@@ -22,7 +22,7 @@ Result detect(Field& field);
 
 Result detect_fast(Field& field);
 
-bool is_well(u8 heights[6], i8 x);
+bool is_reachable(u8 heights[6], i8 x, u8 added);
 
 static inline bool cmp_main(const Score& a, const Score& b)
 {

@@ -25,8 +25,6 @@ Result detect(Field& field)
             break;
         }
 
-        bool is_well = Detect::is_well(heights, x);
-
         u8 max_puyo_add = std::min(3, 12 - heights[x] - (x == 2));
 
         for (u8 p = 0; p < Cell::COUNT - 1; ++p) {
@@ -66,7 +64,7 @@ Result detect(Field& field)
                 );
             }
 
-            if (chain_score.count == 1 && heights[x] + i < 10 && !(is_well && i >= 1)) {
+            if (chain_score.count == 1 && heights[x] + i < 10 && Detect::is_reachable(heights, x, i)) {
                 u8 trigger_height = copy.get_height(x);
                 copy.drop_puyo(x, copy.get_cell(x, trigger_height - 1));
 
@@ -165,6 +163,43 @@ bool is_well(u8 heights[6], i8 x)
     }
 
     return heights[x] <= heights[x - 1] && heights[x] <= heights[x + 1];
+};
+
+bool is_reachable(u8 heights[6], i8 x, u8 added)
+{
+    bool well = false;
+    if (x == 0) {
+        well = heights[0] < heights[1];
+    }
+    else if (x == 5) {
+        well = heights[5] < heights[4];
+    }
+    else {
+        well = heights[x] < heights[x - 1] && heights[x] < heights[x + 1];
+    }
+
+    if (well) {
+        return false;
+    }
+
+    bool well_equal = false;
+    if (x == 0) {
+        well = heights[0] == heights[1];
+    }
+    else if (x == 5) {
+        well = heights[5] == heights[4];
+    }
+    else {
+        well = 
+            (heights[x] == heights[x - 1] && heights[x] <= heights[x + 1]) ||
+            (heights[x] == heights[x + 1] && heights[x] <= heights[x - 1]);
+    }
+
+    if (well_equal && added < 2) {
+        return false;
+    }
+
+    return true;
 };
 
 };

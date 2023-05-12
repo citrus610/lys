@@ -40,7 +40,7 @@ Result think_1p(Field field, std::vector<Cell::Pair> queue, Eval::Weight w = Eva
 
 Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy enemy, Eval::Weight w = Eval::DEFAULT_WEIGHT);
 
-Result build(Search::Result& search_result, u32 field_count, i32 trigger_score = 70000);
+Result build(Search::Result& search_result, Field& field, i32 trigger_score = 70000);
 
 i32 get_unburied_count(Field& field);
 

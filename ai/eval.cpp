@@ -22,6 +22,26 @@ i32 evaluate(Field& field, std::optional<Detect::Result> detect, u8 frame, Weigh
     result += diff * w.diff;
     result += diff_s * w.diff_s;
 
+    i32 well = 0;
+    i32 well_s = 0;
+    if (heights[0] < heights[1]) {
+        well += heights[1] - heights[0];
+        well_s += (heights[1] - heights[0]) * (heights[1] - heights[0]);
+    }
+    if (heights[5] < heights[4]) {
+        well += heights[4] - heights[5];
+        well_s += (heights[4] - heights[5]) * (heights[4] - heights[5]);
+    }
+    for (i32 i = 1; i < 5; ++i) {
+        if (heights[i] < heights[i - 1] && heights[i] < heights[i + 1]) {
+            i32 value = std::min(heights[i - 1], heights[i + 1]) - heights[i];
+            well += value;
+            well_s += value * value;
+        }
+    }
+    result += well * w.well;
+    result += well_s * w.well_s;
+
     i32 shape = 0;
     i32 shape_s = 0;
     for (i32 i = 0; i < 2; ++i) {
