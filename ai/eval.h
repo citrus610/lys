@@ -35,22 +35,22 @@ struct Weight
 i32 evaluate(Field& field, std::optional<Detect::Result> detect, u8 frame, Weight& w);
 
 constexpr Weight DEFAULT_WEIGHT = {
-    .diff = -50,
-    .diff_s = -2,
-    .well = 0,
-    .well_s = 0,
-    .shape = -50,
-    .shape_s = -50,
-    .nuisance = -100,
-    .side_bias = -20,
-    .disconnect = -40,
+    .diff = -750,
+    .diff_s = -95,
+    .well = -50,
+    .well_s = -50,
+    .shape = -1000,
+    .shape_s = -1000,
+    .nuisance = -1000,
+    .side_bias = 0,
+    .disconnect = -500,
 
-    .frame = -20,
+    .frame = -750,
 
-    .chain_count = 500,
-    .chain_score = 10,
-    .chain_height = 20,
-    .chain_needed = -50,
+    .chain_count = 8000,
+    .chain_score = 160,
+    .chain_height = 1000,
+    .chain_needed = -2000,
 };
 
 constexpr Weight FAST_WEIGHT = {
@@ -61,14 +61,14 @@ constexpr Weight FAST_WEIGHT = {
     .shape = 0,
     .shape_s = 0,
     .nuisance = -100,
-    .side_bias = -100,
-    .disconnect = -20,
+    .side_bias = -40,
+    .disconnect = -40,
 
-    .frame = -100,
+    .frame = -80,
 
     .chain_count = 1000,
     .chain_score = 10,
-    .chain_height = 20,
+    .chain_height = 50,
     .chain_needed = -50
 };
 

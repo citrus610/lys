@@ -12,13 +12,24 @@ i32 evaluate(Field& field, std::optional<Detect::Result> detect, u8 frame, Weigh
 
     i32 height_ave = std::accumulate(heights, heights + 6, 0) / 6;
 
-    i32 diff = 0;
-    i32 diff_s = 0;
-    for (i32 i = 0; i < 6; ++i) {
-        i32 value = std::abs(heights[i] - height_ave);
-        diff += value;
-        diff_s += value * value;
-    }
+    // i32 diff = 0;
+    // i32 diff_s = 0;
+    // const i32 diff_coef[6] = { 2, 0, -2, -2, 0, 2 };
+    // for (i32 i = 0; i < 6; ++i) {
+    //     i32 value = std::abs(i32(heights[i]) - height_ave - diff_coef[i]);
+    //     // i32 value = std::abs(i32(heights[i]) - height_ave);
+    //     diff += value;
+    //     diff_s += value * value;
+    // }
+    i32 diff = *std::max_element(heights, heights + 6) - *std::min_element(heights, heights + 6);
+    i32 diff_s = diff * diff;
+    // i32 diff = 0;
+    // i32 diff_s = 0;
+    // for (i32 i = 0; i < 5; ++i) {
+    //     i32 value = std::abs(heights[i] - heights[i + 1]);
+    //     diff += value;
+    //     diff_s += value * value;
+    // }
     result += diff * w.diff;
     result += diff_s * w.diff_s;
 
@@ -84,9 +95,9 @@ i32 evaluate(Field& field, std::optional<Detect::Result> detect, u8 frame, Weigh
 
     if (detect.has_value()) {
         result += (detect->main.chain.score >> 8) * w.chain_score;
+        result += (detect->main.height - height_ave) * w.chain_height;
         result += detect->main.chain.count * w.chain_count;
-        // result += (detect->main.height - height_ave) * w.chain_height;
-        result += detect->main.height * w.chain_height;
+        // result += detect->main.height * w.chain_height;
         result += detect->main.needed * w.chain_needed;
     }
 

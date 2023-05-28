@@ -40,7 +40,8 @@ Result search
                 Candidate candidate = Candidate {
                     .placement = placement,
                     .attacks = std::vector<Attack>(),
-                    .eval = INT32_MIN
+                    .eval = INT32_MIN,
+                    .eval_fast = INT32_MIN
                 };
 
                 Field child = field;
@@ -75,6 +76,13 @@ Result search
                 if (candidate.eval == INT32_MIN && candidate.attacks.empty()) {
                     continue;
                 }
+
+                candidate.eval_fast = Eval::evaluate(
+                    child,
+                    Detect::detect(child),
+                    field.get_drop_pair_frame(placement.x, placement.r) + chain.count * 2,
+                    w
+                );
 
                 {
                     std::lock_guard<std::mutex> lk(mtx);
@@ -294,7 +302,7 @@ void bfs_attacks
                 attacks.push_back({
                     .score = detect.main.chain.score + score,
                     .count = detect.main.chain.count,
-                    .frame = frame + field.get_drop_pair_frame(placements[i].x, placements[i].r) + chain.count * 2 + detect.main.needed - 1,
+                    .frame = frame + field.get_drop_pair_frame(placements[i].x, placements[i].r) + chain.count * 2,
                     .all_clear = false
                 });
             }

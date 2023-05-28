@@ -2,11 +2,13 @@
 
 #include "data.h"
 
-static Chain::Score get_score(std::vector<Cell::Pair> queue, Eval::Weight w)
+static double get_score(std::vector<Cell::Pair> queue, Eval::Weight w)
 {
     Field field = Field();
 
     int skim_count = 0;
+
+    double frame = 0;
 
     for (int i = 0; i < 128; ++i)
     {
@@ -16,6 +18,8 @@ static Chain::Score get_score(std::vector<Cell::Pair> queue, Eval::Weight w)
         tqueue.push_back(queue[(i + 2) % queue.size()]);
 
         AI::Result airesult = AI::think_1p(field, tqueue, w);
+
+        frame += field.get_drop_pair_frame(airesult.placement.x, airesult.placement.r);
 
         field.drop_pair(airesult.placement.x, airesult.placement.r, tqueue[0]);
 
@@ -27,11 +31,13 @@ static Chain::Score get_score(std::vector<Cell::Pair> queue, Eval::Weight w)
         }
 
         if (chain.count > 5 || chain.score > 7000) {
-            return Chain::Score { .count = chain.count, .score = chain.score };
+            return double(chain.score) / frame;
         }
+
+        frame += chain.count * 2;
     }
 
-    return Chain::Score { .count = 0, .score = 0 };
+    return 0.0;
 };
 
 static void tuner_save_json(Eval::SaveData& save_data, int gen_id)

@@ -20,6 +20,7 @@ struct Candidate
     Move::Placement placement;
     std::vector<Attack> attacks;
     i32 eval = INT32_MIN;
+    i32 eval_fast = INT32_MIN;
 };
 
 struct Result

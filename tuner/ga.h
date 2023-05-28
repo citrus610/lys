@@ -26,5 +26,5 @@ public:
     void simulate();
 };
 
-#define GA_RANDOMIZE(p, d) result.p = GeneticAl::randomize(h.p, d);
-#define GA_MUTATE(a, b, p) result.p = GeneticAl::mutate(a.p, b.p);
+#define GA_RANDOMIZE(p, d, max) result.p = GeneticAl::randomize(h.p, d, max);
+#define GA_MUTATE(a, b, p, max) result.p = GeneticAl::mutate(a.p, b.p, max);

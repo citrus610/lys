@@ -14,14 +14,12 @@ Result think_1p(Field field, std::vector<Cell::Pair> queue, Eval::Weight w, i32 
         };
     }
 
-    return build(search_result, field, trigger_score);
+    return AI::build(search_result, field, trigger_score);
 };
 
 Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy enemy, Eval::Weight w)
 {
     auto search_attacks = Search::search_attacks(field, queue, false);
-
-    // auto enemy_danger = AI::get_enemy_danger(data, enemy, field);
 
     // If enemy attacked
     if (enemy.attack > 0) {
@@ -29,6 +27,7 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
         std::vector<std::pair<u32, Search::Attack>> candidate_attack;
         std::vector<std::pair<u32, Search::Attack>> candidate_attack_all;
         i32 best_attack = 0;
+        i32 best_all_clear = 0;
 
         for (u32 i = 0; i < search_attacks.candidates.size(); ++i) {
             if (search_attacks.candidates[i].attacks.empty()) {
@@ -49,11 +48,31 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
                 candidate_attack_all.push_back({i, attack});
 
                 best_attack = std::max(best_attack, attack.score + data.bonus + data.all_clear * data.target * 30);
+
+                if (attack.all_clear) {
+                    best_all_clear = std::max(best_all_clear, attack.score);
+                }
             }
         }
 
         // If there aren't any possible offset attacks in the given time frame
         if (candidate_attack.empty()) {
+            // If enemy is triggering an all clear chain and we also found an all clear chain, then trigger it
+            if (enemy.all_clear &&
+                best_all_clear > 0 &&
+                best_all_clear + data.bonus + data.all_clear * data.target * 30 >= enemy.attack * data.target - 30 * data.target) {
+                auto best_candidate = *std::max_element(
+                    candidate_attack_all.begin(),
+                    candidate_attack_all.end(),
+                    [&] (const std::pair<u32, Search::Attack>& a, const std::pair<u32, Search::Attack>& b) {
+                        if (a.second.all_clear != b.second.all_clear) {
+                            return a.second.all_clear < b.second.all_clear;
+                        }
+                        return a.second.score < b.second.score;
+                    }
+                );
+            }
+
             // And if there are still some attacks (but can't offset) and the remaining time is small
             if ((enemy.attack_frame <= 4) && (!candidate_attack_all.empty())) {
                 // Then trigger the biggest possible chain
@@ -61,12 +80,6 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
                     candidate_attack_all.begin(),
                     candidate_attack_all.end(),
                     [&] (const std::pair<u32, Search::Attack>& a, const std::pair<u32, Search::Attack>& b) {
-                        if (enemy.all_clear && enemy.attack <= 24) {
-                            if (a.second.all_clear == b.second.all_clear) {
-                               return a.second.score < b.second.score;
-                            }
-                            return a.second.all_clear < b.second.all_clear;
-                        }
                         return a.second.score < b.second.score;
                     }
                 );
@@ -81,7 +94,7 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
             // If there aren't any possible offset attacks but the remaining time is large
             else {
                 // Then try to build chain fast
-                return think_1p(field, queue, Eval::FAST_WEIGHT);
+                return AI::think_1p(field, queue, Eval::FAST_WEIGHT);
             }
         }
         // Else, if there are possible offset attacks
@@ -98,7 +111,7 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
                 best_attack >= 70000 ||
                 field.get_count() >= 60 ||
                 AI::get_small_field(enemy.field, field) ||
-                AI::get_garbage_obstruct(enemy.field)) {
+                AI::get_garbage_obstruct(enemy.field, enemy.queue)) {
                 best_candidate = *std::max_element(
                     candidate_attack.begin(),
                     candidate_attack.end(),
@@ -121,24 +134,24 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
                             return a_over_enemy < b_over_enemy;
                         }
 
-                        // if (a.second.count != b.second.count) {
-                        //     return a.second.count > b.second.count;
+                        // if (a.second.count * 2 + a.second.frame != b.second.count * 2 + b.second.frame) {
+                        //     return a.second.count * 2 + a.second.frame > b.second.count * 2 + b.second.frame;
                         // }
 
                         // if (a.second.all_clear != b.second.all_clear) {
                         //     return a.second.all_clear < b.second.all_clear;
                         // }
 
-                        // if (a.second.frame != b.second.frame) {
-                        //     return a.second.frame > b.second.frame;
-                        // }
-
-                        if (a.second.count * 2 + a.second.frame != b.second.count * 2 + b.second.frame) {
-                            return a.second.count * 2 + a.second.frame > b.second.count * 2 + b.second.frame;
+                        if (a.second.count != b.second.count) {
+                            return a.second.count > b.second.count;
                         }
 
                         if (a.second.all_clear != b.second.all_clear) {
                             return a.second.all_clear < b.second.all_clear;
+                        }
+
+                        if (a.second.frame != b.second.frame) {
+                            return a.second.frame > b.second.frame;
                         }
 
                         return a.second.score < b.second.score;
@@ -154,84 +167,42 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
     }
 
     // If the enemy is being obstructed by garbage
-    if (AI::get_garbage_obstruct(enemy.field)) {
-        // If we are having all clear, then trigger a small chain
-        if (data.all_clear) {
-            auto best_candidate = *std::max_element(
-                search_attacks.candidates.begin(),
-                search_attacks.candidates.end(),
-                [&] (const Search::Candidate& a, const Search::Candidate& b) {
-                    if (a.attacks[0].count != b.attacks[0].count) {
-                        return a.attacks[0].count > b.attacks[0].count;
-                    }
-                    return a.attacks[0].score < b.attacks[0].score;
-                }
-            );
-
-            if (best_candidate.attacks[0].count <= 4) {
-                return Result {
-                    .placement = best_candidate.placement,
-                    .eval = -1
-                };
-            }
-        }
-
+    if (AI::get_garbage_obstruct(enemy.field, enemy.queue)) {
         // Build fast and trigger chain fast
-        return think_1p(field, queue, Eval::FAST_WEIGHT);
+        return AI::think_harass(field, queue, Eval::FAST_WEIGHT, (data.all_clear) ? 10 : 2100);
     }
 
     // If the enemy has all clear
     if (enemy.all_clear) {
         // Then build chain fast
-        return think_1p(field, queue, Eval::FAST_WEIGHT);
+        return AI::think_1p(field, queue, Eval::FAST_WEIGHT);
     }
 
     // Else, our enemy is not sending any attacks and they are in a danger position, then harass them
-    if (AI::get_harassable(data, enemy, field) || AI::get_small_field(enemy.field, field)) {
-        // Get all possible attacks now
-        std::vector<Search::Candidate> attack_candidate;
-        std::vector<Search::Candidate> attack_candidate_fast;
-
-        for (auto& candidate : search_attacks.candidates) {
-            if (candidate.attacks.empty()) {
-                continue;
-            }
-
-            // These are candidates with attacks
-            attack_candidate.push_back(candidate);
-
-            // These are candidates that can trigger chain right away
-            if (candidate.attacks[0].frame == 0) {
-                attack_candidate_fast.push_back(candidate);
-            }
-        }
-
-        if (!attack_candidate_fast.empty()) {
-            auto best_candidate = *std::max_element(
-                attack_candidate_fast.begin(),
-                attack_candidate_fast.end(),
-                [&] (const Search::Candidate& a, const Search::Candidate& b) {
-                    if (a.attacks[0].count != b.attacks[0].count) {
-                        return a.attacks[0].count > b.attacks[0].count;
-                    }
-                    return a.attacks[0].score < b.attacks[0].score;
-                }
-            );
-
-            if (best_candidate.attacks[0].count <= 4 && best_candidate.attacks[0].score + data.bonus + data.all_clear * data.target * 30 >= 360) {
-                return Result {
-                    .placement = best_candidate.placement,
-                    .eval = -1
-                };
-            }
-        }
+    if (AI::get_small_field(enemy.field, field)) {
+        // Trigger harassment
+        return AI::think_harass(field, queue, w, (data.all_clear) ? 10 : 420);
     }
 
     // Else, build chain normally
-    return think_1p(field, queue, w);
+    return AI::think_1p(field, queue, w);
 };
 
-Result build(Search::Result& search_result, Field& field, i32 trigger_score)
+Result think_harass(Field field, std::vector<Cell::Pair> queue, Eval::Weight w, i32 trigger_score)
+{
+    auto search_result = Search::search(field, queue, w);
+
+    if (search_result.candidates.empty()) {
+        return Result {
+            .placement = { .x = 2, .r = Direction::Type::UP },
+            .eval = -1
+        };
+    }
+
+    return AI::build(search_result, field, trigger_score, true);
+};
+
+Result build(Search::Result& search_result, Field& field, i32 trigger_score, bool harass)
 {
     // All clear
 #ifdef TUNER
@@ -271,7 +242,7 @@ Result build(Search::Result& search_result, Field& field, i32 trigger_score)
     // Check trigger chain condition
     i32 chain_score_max = 0;
     i32 attack_count = 0;
-    for (auto candidate : search_result.candidates) {
+    for (auto& candidate : search_result.candidates) {
         for (auto attack : candidate.attacks) {
             chain_score_max = std::max(chain_score_max, attack.score);
         }
@@ -289,6 +260,10 @@ Result build(Search::Result& search_result, Field& field, i32 trigger_score)
                     return a.eval < b.eval;
                 }
 
+                if (a.eval_fast != b.eval_fast) {
+                    return a.eval_fast < b.eval_fast;
+                }
+
                 return a.attacks.size() < b.attacks.size();
             }
         );
@@ -303,29 +278,63 @@ Result build(Search::Result& search_result, Field& field, i32 trigger_score)
 
     // Trigger chain
     if (attack_count > 0) {
-        std::pair<i32, Result> best = { 0, Result() };
+        if (!harass) {
+            std::pair<i32, Result> best = { 0, Result() };
 
-        for (auto& c : search_result.candidates) {
-            if (c.attacks.empty()) {
-                continue;
+            for (auto& c : search_result.candidates) {
+                if (c.attacks.empty()) {
+                    continue;
+                }
+
+                auto attack = *std::max_element(
+                    c.attacks.begin(),
+                    c.attacks.end(),
+                    [&] (const Search::Attack& a, const Search::Attack& b) {
+                        return a.score < b.score;
+                    }
+                );
+
+                if (best.first < attack.score) {
+                    best.first = attack.score;
+                    best.second.placement = c.placement;
+                    best.second.eval = c.eval;
+                }
             }
 
-            auto attack = *std::max_element(
-                c.attacks.begin(),
-                c.attacks.end(),
-                [&] (const Search::Attack& a, const Search::Attack& b) {
-                    return a.score < b.score;
+            return best.second;
+        }
+        else {
+            std::vector<std::pair<i32, Search::Attack>> attacks;
+
+            for (i32 i = 0; i < search_result.candidates.size(); ++i) {
+                for (auto attack : search_result.candidates[i].attacks) {
+                    if (attack.score >= trigger_score) {
+                        attacks.push_back({ i, attack });
+                    }
+                }
+            }
+
+            auto best = *std::max_element(
+                attacks.begin(),
+                attacks.end(),
+                [&] (const std::pair<i32, Search::Attack>& a, const std::pair<i32, Search::Attack>& b) {
+                    if (search_result.candidates[a.first].eval != search_result.candidates[b.first].eval) {
+                        return search_result.candidates[a.first].eval < search_result.candidates[b.first].eval;
+                    }
+                    
+                    if (a.second.frame + a.second.count * 2 != b.second.frame + b.second.count * 2) {
+                        return a.second.frame + a.second.count * 2 > b.second.frame + b.second.count * 2;
+                    }
+
+                    return a.second.score < b.second.score;
                 }
             );
 
-            if (best.first < attack.score) {
-                best.first = attack.score;
-                best.second.placement = c.placement;
-                best.second.eval = c.eval;
-            }
+            return Result {
+                .placement = search_result.candidates[best.first].placement,
+                .eval = search_result.candidates[best.first].eval
+            };
         }
-
-        return best.second;
     }
 
     // Error
@@ -362,11 +371,11 @@ i32 get_attack(Field& field, std::vector<Cell::Pair>& queue)
     return best;
 };
 
-bool get_garbage_obstruct(Field& field)
+bool get_garbage_obstruct(Field& field, std::vector<Cell::Pair>& queue)
 {
     i32 unburied_count = AI::get_unburied_count(field);
     i32 garbage_count = field.data[static_cast<i32>(Cell::Type::GARBAGE)].get_count();
-    // i32 attack = AI::get_attack(field, )
+    i32 attack = AI::get_attack(field, queue);
 
     if (garbage_count < 1) {
         return false;
@@ -374,7 +383,8 @@ bool get_garbage_obstruct(Field& field)
 
     return
         (garbage_count >= (field.get_count() / 2)) ||
-        (unburied_count <= field.get_count() / 2);
+        (unburied_count <= field.get_count() / 2) ||
+        (garbage_count > 0 && attack <= 360);
 };
 
 bool get_small_field(Field& field, Field& other)

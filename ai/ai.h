@@ -40,18 +40,18 @@ Result think_1p(Field field, std::vector<Cell::Pair> queue, Eval::Weight w = Eva
 
 Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy enemy, Eval::Weight w = Eval::DEFAULT_WEIGHT);
 
-Result build(Search::Result& search_result, Field& field, i32 trigger_score = 70000);
+Result think_harass(Field field, std::vector<Cell::Pair> queue, Eval::Weight w = Eval::FAST_WEIGHT, i32 trigger_score = 420);
+
+Result build(Search::Result& search_result, Field& field, i32 trigger_score = 70000, bool harass = false);
 
 i32 get_unburied_count(Field& field);
 
 i32 get_attack(Field& field, std::vector<Cell::Pair>& queue);
 
-bool get_garbage_obstruct(Field& field);
+bool get_garbage_obstruct(Field& field, std::vector<Cell::Pair>& queue);
 
 bool get_small_field(Field& field, Field& other);
 
 bool get_harassable(Data& data, Enemy& enemy, Field& field);
-
-i32 get_enemy_danger(Data& data, Enemy& enemy, Field& field);
 
 };

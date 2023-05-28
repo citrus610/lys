@@ -22,16 +22,18 @@ Result detect(Field& field);
 
 Result detect_fast(Field& field);
 
-bool is_reachable(u8 heights[6], i8 x, u8 added);
+bool is_well(u8 heights[6], i8 x);
+
+bool is_reachable(Field& field, u8 heights[6], i8 x, u8 added, u8 p);
 
 static inline bool cmp_main(const Score& a, const Score& b)
 {
     if (a.chain.count != b.chain.count) {
         return a.chain.count < b.chain.count;
     }
-    if (a.height != b.height) {
-        return a.height < b.height;
-    }
+    // if (a.height != b.height) {
+    //     return a.height < b.height;
+    // }
     return a.chain.score < b.chain.score;
 };
 

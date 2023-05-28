@@ -18,9 +18,9 @@ endif
 
 STATIC_LIB = -luser32 -lgdi32 -lopengl32 -lgdiplus -lShlwapi -ldwmapi -lstdc++fs -lsetupapi -lhid -static
 
-.PHONY: all cli test clean makedir
+.PHONY: all cli test nn clean makedir
 
-all: cli test tuner
+all: cli test tuner nn
 
 cli: makedir
 	@$(CXX) $(CXXFLAGS) "core\*.cpp" "ai\*.cpp" "cli\*.cpp" -o "bin\cli\cli.exe"
@@ -34,6 +34,9 @@ tuner: makedir
 ppc: makedir
 	@$(CXX) $(CXXFLAGS) "core\*.cpp" "ai\*.cpp" "ppc\*.cpp" $(STATIC_LIB) -o "bin\ppc\ppc.exe"
 
+nn: makedir
+	@$(CXX) $(CXXFLAGS) -DTUNER "core\*.cpp" "ai\*.cpp" "nn\*.cpp" -o "bin\nn\nn.exe"
+
 clean: makedir
 	@rm -rf bin
 	@make makedir
@@ -44,5 +47,6 @@ makedir:
 	@mkdir -p bin\test
 	@mkdir -p bin\tuner\data
 	@mkdir -p bin\ppc
+	@mkdir -p bin\nn
 
 .DEFAULT_GOAL := cli

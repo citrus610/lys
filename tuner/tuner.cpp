@@ -68,7 +68,7 @@ void Tuner::start()
             cout << "process: " << i << "/" << int(this->ga.pool.size()) << endl;
 
             for (int k = 0; k < test_count; ++k) {
-                this->ga.pool[i].score += get_score(queue[k], this->ga.pool[i].heuristic).score;
+                this->ga.pool[i].score += get_score(queue[k], this->ga.pool[i].heuristic);
             }
 
             if (this->ga.pool[i].score > best_score) {
