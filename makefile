@@ -37,6 +37,9 @@ ppc: makedir
 nn: makedir
 	@$(CXX) $(CXXFLAGS) -DTUNER "core\*.cpp" "ai\*.cpp" "nn\*.cpp" -o "bin\nn\nn.exe"
 
+puyop: makedir
+	@$(CXX) $(CXXFLAGS) "core\*.cpp" "ai\*.cpp" "puyop\*.cpp" -o "bin\puyop\puyop.exe"
+
 clean: makedir
 	@rm -rf bin
 	@make makedir
@@ -48,5 +51,6 @@ makedir:
 	@mkdir -p bin\tuner\data
 	@mkdir -p bin\ppc
 	@mkdir -p bin\nn
+	@mkdir -p bin\puyop
 
 .DEFAULT_GOAL := cli
