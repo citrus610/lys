@@ -2,6 +2,7 @@
 
 #include "../core/core.h"
 #include "detect.h"
+#include "form.h"
 #include <fstream>
 #include <string>
 #include <iomanip>
@@ -23,6 +24,7 @@ struct Weight
     i32 nuisance = 0;
     i32 side_bias = 0;
     i32 disconnect = 0;
+    i32 form = 0;
 
     i32 frame = 0;
 
@@ -35,22 +37,23 @@ struct Weight
 i32 evaluate(Field& field, std::optional<Detect::Result> detect, u8 frame, Weight& w);
 
 constexpr Weight DEFAULT_WEIGHT = {
-    .diff = -750,
-    .diff_s = -95,
-    .well = -50,
-    .well_s = -50,
-    .shape = -1000,
-    .shape_s = -1000,
-    .nuisance = -1000,
+    .diff = 0,
+    .diff_s = 0,
+    .well = 0,
+    .well_s = 0,
+    .shape = -100,
+    .shape_s = 0,
+    .nuisance = -100,
     .side_bias = 0,
-    .disconnect = -500,
+    .disconnect = -50,
+    .form = 20,
 
-    .frame = -750,
+    .frame = -75,
 
-    .chain_count = 8000,
-    .chain_score = 160,
-    .chain_height = 1000,
-    .chain_needed = -2000,
+    .chain_count = 1000,
+    .chain_score = 0,
+    .chain_height = 100,
+    .chain_needed = -100,
 };
 
 constexpr Weight FAST_WEIGHT = {
@@ -58,18 +61,19 @@ constexpr Weight FAST_WEIGHT = {
     .diff_s = 0,
     .well = 0,
     .well_s = 0,
-    .shape = 0,
+    .shape = -100,
     .shape_s = 0,
     .nuisance = -100,
-    .side_bias = -40,
-    .disconnect = -40,
+    .side_bias = -20,
+    .disconnect = -50,
+    .form = 0,
 
-    .frame = -80,
+    .frame = -75,
 
     .chain_count = 1000,
-    .chain_score = 10,
-    .chain_height = 50,
-    .chain_needed = -50
+    .chain_score = 0,
+    .chain_height = 100,
+    .chain_needed = -100
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Weight,
@@ -82,6 +86,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Weight,
     nuisance,
     side_bias,
     disconnect,
+    form,
     frame,
     chain_count,
     chain_score,

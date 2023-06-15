@@ -302,7 +302,7 @@ void bfs_attacks
                 attacks.push_back({
                     .score = detect.main.chain.score + score,
                     .count = detect.main.chain.count,
-                    .frame = frame + field.get_drop_pair_frame(placements[i].x, placements[i].r) + chain.count * 2,
+                    .frame = frame + field.get_drop_pair_frame(placements[i].x, placements[i].r) + chain.count * 2 + detect.main.needed + 1,
                     .all_clear = false
                 });
             }

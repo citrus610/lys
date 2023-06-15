@@ -23,6 +23,11 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
 
     // If enemy attacked
     if (enemy.attack > 0) {
+        // If enemy attack is small and we are still in the beginning of the game, then we try to build tall and ignore it
+        if (!data.all_clear && enemy.attack < 6 && field.get_count() < 30) {
+            return AI::think_1p(field, queue, Eval::FAST_WEIGHT);
+        }
+
         // Find all attacks in possible time frame
         std::vector<std::pair<u32, Search::Attack>> candidate_attack;
         std::vector<std::pair<u32, Search::Attack>> candidate_attack_all;
@@ -127,8 +132,8 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
                     candidate_attack.begin(),
                     candidate_attack.end(),
                     [&] (const std::pair<u32, Search::Attack>& a, const std::pair<u32, Search::Attack>& b) {
-                        bool a_over_enemy = (a.second.score + data.bonus) / data.target + data.all_clear * 30 > enemy.attack;
-                        bool b_over_enemy = (b.second.score + data.bonus) / data.target + data.all_clear * 30 > enemy.attack;
+                        i32 a_over_enemy = (a.second.score + data.bonus) / data.target + data.all_clear * 30 > enemy.attack;
+                        i32 b_over_enemy = (b.second.score + data.bonus) / data.target + data.all_clear * 30 > enemy.attack;
 
                         if (a_over_enemy != b_over_enemy) {
                             return a_over_enemy < b_over_enemy;
@@ -150,8 +155,8 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
                             return a.second.all_clear < b.second.all_clear;
                         }
 
+                        return a.second.frame > b.second.frame;
                         if (a.second.frame != b.second.frame) {
-                            return a.second.frame > b.second.frame;
                         }
 
                         return a.second.score < b.second.score;
@@ -166,22 +171,70 @@ Result think_2p(Field field, std::vector<Cell::Pair> queue, Data data, Enemy ene
         }
     }
 
+    // If we are in danger or the enemy is having all clear, them build fast and safely
+    if (enemy.all_clear || AI::get_small_field(field, enemy.field)) {
+        return AI::think_1p(field, queue, Eval::FAST_WEIGHT);
+    }
+
     // If the enemy is being obstructed by garbage
     if (AI::get_garbage_obstruct(enemy.field, enemy.queue)) {
         // Build fast and trigger chain fast
         return AI::think_harass(field, queue, Eval::FAST_WEIGHT, (data.all_clear) ? 10 : 2100);
     }
 
-    // If the enemy has all clear
-    if (enemy.all_clear) {
-        // Then build chain fast
-        return AI::think_1p(field, queue, Eval::FAST_WEIGHT);
-    }
-
-    // Else, our enemy is not sending any attacks and they are in a danger position, then harass them
+    // Else, if our enemy's field is smaller than our's field a lot, then harass them
     if (AI::get_small_field(enemy.field, field)) {
         // Trigger harassment
         return AI::think_harass(field, queue, w, (data.all_clear) ? 10 : 420);
+    }
+
+    // Try to harass
+    if (field.get_count() >= 48 && field.get_count() < 62) {
+        i32 enemy_attack = Detect::detect(enemy.field).main.chain.score + enemy.all_clear * 30 * data.target;
+
+        u8 enemy_heights[6];
+        enemy.field.get_heights(enemy_heights);
+
+        i32 enemy_height_diff = *std::max_element(enemy_heights, enemy_heights + 6) - *std::min_element(enemy_heights, enemy_heights + 6);
+
+        if (enemy_attack < 840 || enemy_heights[2] > 10 || enemy_height_diff <= 1) {
+            std::vector<std::pair<i32, i32>> candidate_attack;
+
+            for (i32 i = 0; i < search_attacks.candidates.size(); ++i) {
+                if (search_attacks.candidates[i].attacks[0].frame != 0) {
+                    continue;
+                }
+
+                auto attack_harass = search_attacks.candidates[i].attacks[0];
+
+                if (attack_harass.count < 4 && attack_harass.score + data.bonus + data.all_clear * 30 * data.target >= 420) {
+                    auto field_copy = field;
+
+                    field_copy.drop_pair(search_attacks.candidates[i].placement.x, search_attacks.candidates[i].placement.r, queue[0]);
+                    field_copy.pop();
+
+                    candidate_attack.push_back({
+                        i,
+                        Eval::evaluate(field_copy, Detect::detect(field_copy), 0, w)
+                    });
+                }
+            }
+
+            if (!candidate_attack.empty()) {
+                auto best = *std::max_element(
+                    candidate_attack.begin(),
+                    candidate_attack.end(),
+                    [&] (const std::pair<i32, i32>& a, const std::pair<i32, i32>& b) {
+                        return a.second < b.second;
+                    }
+                );
+
+                return Result {
+                    .placement = search_attacks.candidates[best.first].placement,
+                    .eval = best.second
+                };
+            }
+        }
     }
 
     // Else, build chain normally
@@ -375,7 +428,7 @@ bool get_garbage_obstruct(Field& field, std::vector<Cell::Pair>& queue)
 {
     i32 unburied_count = AI::get_unburied_count(field);
     i32 garbage_count = field.data[static_cast<i32>(Cell::Type::GARBAGE)].get_count();
-    i32 attack = AI::get_attack(field, queue);
+    i32 attack = Detect::detect(field).main.chain.score;
 
     if (garbage_count < 1) {
         return false;
@@ -394,12 +447,21 @@ bool get_small_field(Field& field, Field& other)
 
 bool get_harassable(Data& data, Enemy& enemy, Field& field)
 {
-    i32 enemy_attack = AI::get_attack(enemy.field, enemy.queue) + enemy.all_clear * 30 * data.target;
+    if (field.get_count() < 48 || field.get_count() >= 62) {
+        return false;
+    }
+
+    i32 enemy_attack = Detect::detect(enemy.field).main.chain.score + enemy.all_clear * 30 * data.target;
+
+    u8 enemy_heights[6];
+    enemy.field.get_heights(enemy_heights);
+    i32 enemy_height_diff = *std::max_element(enemy_heights, enemy_heights + 6) - *std::min_element(enemy_heights, enemy_heights + 6);
 
     return
         (enemy_attack <= 360 && field.get_count() >= 48 && field.get_count() <= 62) ||
         (enemy_attack <= 360 && (field.get_count() >= enemy.field.get_count() * 2)) ||
-        (enemy_attack <= 360 && enemy.field.get_height(2) >= 11);
+        (enemy_attack <= 360 && enemy.field.get_height(2) >= 11) ||
+        (enemy_attack <= 360 && enemy_height_diff <= 2);
 };
 
 i32 get_enemy_danger(Data& data, Enemy& enemy, Field& field)

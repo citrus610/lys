@@ -53,18 +53,6 @@ Result detect(Field& field)
                 Detect::cmp_main
             );
 
-            // if (chain_score.score >= 100 && chain_score.score <= 5000) {
-            //     result.harass = std::max(
-            //         result.harass,
-            //         Score {
-            //             .chain = chain_score,
-            //             .needed = i + 1,
-            //             .height = heights[x]
-            //         },
-            //         Detect::cmp_sub
-            //     );
-            // }
-
             if (chain_score.count == 1 && heights[x] > 1 && heights[x] + i < 10 && Detect::is_reachable(field, heights, x, i, p)) {
                 for (u8 p_drop = 0; p_drop < Cell::COUNT - 1; ++p_drop) {
                     if (p_drop == p) {
@@ -88,25 +76,6 @@ Result detect(Field& field)
                     );
                 }
             }
-
-            // if (chain_score.count == 1 && heights[x] > 1 && heights[x] + i < 10 && Detect::is_reachable(field, heights, x, i, p)) {
-            //     u8 trigger_height = copy.get_height(x);
-            //     copy.drop_puyo(x, copy.get_cell(x, trigger_height - 1));
-
-            //     auto previous_link = chain_mask[0];
-            //     chain_mask = copy.pop();
-            //     chain_mask.insert(previous_link, 0);
-
-            //     result.main = std::max(
-            //         result.main,
-            //         Score {
-            //             .chain = Chain::get_score(chain_mask),
-            //             .needed = i + 2,
-            //             .height = heights[x]
-            //         },
-            //         Detect::cmp_main
-            //     );
-            // }
         }
     }
 
@@ -155,22 +124,10 @@ Result detect_fast(Field& field)
                 Score {
                     .chain = chain_score,
                     .needed = i + 1,
-                    .height = heights[x]
+                    .height = heights[x] + 1
                 },
                 Detect::cmp_main
             );
-
-            // if (chain_score.score >= 100 && chain_score.score <= 5000) {
-            //     result.harass = std::max(
-            //         result.harass,
-            //         Score {
-            //             .chain = chain_score,
-            //             .needed = i + 1,
-            //             .height = heights[x]
-            //         },
-            //         Detect::cmp_sub
-            //     );
-            // }
         }
     }
 
@@ -203,6 +160,7 @@ bool is_reachable(Field& field, u8 heights[6], i8 x, u8 added, u8 p)
         }
 
         well = heights[0] < heights[1] || (heights[0] == heights[1] && added < 1);
+        // well = heights[0] <= heights[1];
     }
     else if (x == 5) {
         if (field.data[p].get_bit(4, heights[5])) {
@@ -210,6 +168,7 @@ bool is_reachable(Field& field, u8 heights[6], i8 x, u8 added, u8 p)
         }
 
         well = heights[5] < heights[4] || (heights[5] == heights[4] && added < 1);
+        // well = heights[5] <= heights[4];
     }
     else {
         if (field.data[p].get_bit(x + 1, heights[x]) || field.data[p].get_bit(x - 1, heights[x])) {
@@ -219,6 +178,7 @@ bool is_reachable(Field& field, u8 heights[6], i8 x, u8 added, u8 p)
         well =
             (heights[x] < heights[x - 1] && heights[x] < heights[x + 1]) ||
             ((heights[x] == heights[x - 1] || heights[x] == heights[x + 1]) && added < 1);
+        // well = heights[x] <= heights[x - 1] && heights[x] <= heights[x + 1];
     }
 
     if (well) {

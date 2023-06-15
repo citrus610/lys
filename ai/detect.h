@@ -15,7 +15,6 @@ struct Score
 struct Result
 {
     Score main = Score();
-    Score harass = Score();
 };
 
 Result detect(Field& field);
@@ -31,9 +30,11 @@ static inline bool cmp_main(const Score& a, const Score& b)
     if (a.chain.count != b.chain.count) {
         return a.chain.count < b.chain.count;
     }
-    // if (a.height != b.height) {
-    //     return a.height < b.height;
-    // }
+
+    if (a.height != b.height) {
+        return a.height < b.height;
+    }
+    
     return a.chain.score < b.chain.score;
 };
 

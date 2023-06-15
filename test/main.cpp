@@ -53,7 +53,7 @@ static Chain::Score get_score(std::vector<Cell::Pair> queue, Eval::Weight w)
             break;
         }
 
-        if (chain.count > 5 || chain.score > 7000) {
+        if (chain.count > 5 || chain.score > 5000) {
             return Chain::Score { .count = chain.count, .score = chain.score };
         }
     }
