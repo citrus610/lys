@@ -171,7 +171,7 @@ int main()
     save_json_heuristic();
     load_json_heuristic(heuristic);
 
-    int time_wait = 500;
+    int time_wait = 400;
 
     vector<Cell::Pair> queue = create_queue();
 

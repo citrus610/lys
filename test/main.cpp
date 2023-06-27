@@ -29,11 +29,20 @@ void save_json_heuristic()
     o.close();
 };
 
-static Chain::Score get_score(std::vector<Cell::Pair> queue, Eval::Weight w)
+struct Score
+{
+    i32 count = 0;
+    i32 score = 0;
+    i32 frame = 0;
+};
+
+static Score get_score(std::vector<Cell::Pair> queue, Eval::Weight w)
 {
     Field field = Field();
 
-    int skim_count = 0;
+    Score best = Score { 0, 0, 0 };
+
+    i32 frame = 0;
 
     for (int i = 0; i < 128; ++i)
     {
@@ -44,6 +53,8 @@ static Chain::Score get_score(std::vector<Cell::Pair> queue, Eval::Weight w)
 
         AI::Result airesult = AI::think_1p(field, tqueue, w);
 
+        frame += field.get_drop_pair_frame(airesult.placement.x, airesult.placement.r);
+
         field.drop_pair(airesult.placement.x, airesult.placement.r, tqueue[0]);
 
         auto mask = field.pop();
@@ -53,12 +64,24 @@ static Chain::Score get_score(std::vector<Cell::Pair> queue, Eval::Weight w)
             break;
         }
 
-        if (chain.count > 5 || chain.score > 5000) {
-            return Chain::Score { .count = chain.count, .score = chain.score };
+        if (chain.count > 0) {
+            best = std::max(
+                best,
+                Score { .count = chain.count, .score = chain.score, .frame = frame },
+                [&] (const Score& a, const Score& b) {
+                    return a.score < b.score;
+                }
+            );
+        }
+
+        frame += chain.count * 2;
+
+        if (chain.score > 5000 || chain.count >= 4) {
+            break;
         }
     }
 
-    return Chain::Score { .count = 0, .score = 0 };
+    return best;
 };
 
 std::vector<Cell::Pair> create_queue()
@@ -164,6 +187,7 @@ int main()
 
     std::atomic<i32> map_count[20] = { 0 };
     std::atomic<i32> map_score[20] = { 0 };
+    std::atomic<i32> map_frame[20] = { 0 };
 
     Eval::Weight w;
     save_json_heuristic();
@@ -183,6 +207,7 @@ int main()
                 auto score = get_score(queue, w);
                 map_count[score.count] += 1;
                 map_score[score.score / 10000] += 1;
+                map_frame[score.frame / 5] += 1;
                 i++;
                 printf("\rprocess: %d/%d", i.load(), sim_count);
             }
@@ -203,6 +228,12 @@ int main()
     printf("AI chain score distribution (%d simulations):\n", sim_count);
     for (i32 k = 0; k < 20; ++k) {
         printf("    %d - %d: %d\n", k * 10000, (k + 1) * 10000, map_score[k].load());
+    }
+
+    printf("\n");
+    printf("AI chain frame distribution (%d simulations):\n", sim_count);
+    for (i32 k = 0; k < 20; ++k) {
+        printf("    %d - %d: %d\n", k * 5, (k + 1) * 5, map_frame[k].load());
     }
 
     return 0;
