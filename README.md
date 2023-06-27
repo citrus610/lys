@@ -12,7 +12,7 @@ An AI designed to play Puyo Puyo Tsu 1P and PVP.
 - `ai` - the AI implementation.
 - `cli` - the standalone client, for now only showing the AI playing 1P.
 - `test` - tool for testing the AI's chaining capability.
-- `tuner` - tuner for the AI using generic algorithm.
+- `tuner` - tuner for the AI using SPSA.
 
 ## License
 This project is licensed under [MIT LICENSE](LICENSE).
